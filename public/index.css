@@ -1,0 +1,10 @@
+canvas {
+  border: 1px solid black;
+  width: 800px;
+}
+
+.controls {
+  padding: 10px;
+  border: 1px solid black;
+  margin-bottom: 10px;
+}
