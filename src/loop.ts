@@ -1,10 +1,10 @@
-interface RenderLoopOptions {
+type RenderLoopOptions = {
   // Delta limit value in seconds. Limit might be reached if render loop is paused
   // or breakpoint is activated during debugging.
   deltaTimeLimit?: number;
   fps?: number;
   onTick?: ({ deltaTime }: { deltaTime: number; lastTime: number }) => void;
-}
+};
 
 const DEFAULT_OPTIONS = {
   deltaTimeLimit: 1,

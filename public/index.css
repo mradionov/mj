@@ -7,4 +7,6 @@ canvas {
   padding: 10px;
   border: 1px solid black;
   margin-bottom: 10px;
+  display: flex;
+  gap: 10px;
 }
