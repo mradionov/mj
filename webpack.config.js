@@ -24,9 +24,7 @@ module.exports = {
 
   plugins: [
     new CopyWebpackPlugin({
-      patterns: [
-        { from: 'public/' },
-      ],
+      patterns: [{ from: 'public/' }, { from: 'src/shaders/', to: 'shaders/' }],
     }),
   ],
 };
