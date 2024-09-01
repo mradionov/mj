@@ -24,7 +24,10 @@ module.exports = {
 
   plugins: [
     new CopyWebpackPlugin({
-      patterns: [{ from: 'public/' }, { from: 'src/shaders/', to: 'shaders/' }],
+      patterns: [
+        { from: 'public/' },
+        { from: 'src/nodes/*.(frag|vert)', to: 'nodes/[name][ext]' },
+      ],
     }),
   ],
 };

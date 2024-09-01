@@ -1,7 +1,10 @@
 import { RenderLoop } from './loop';
 import { TempoTracker } from './tempo';
 import { Renderer } from './renderer';
-import { RectNode } from './node';
+import { Node } from './nodes/node';
+import { RectPulse } from './nodes/rect_pulse';
+import { ShaderLoader } from './shader';
+import { CirclePulse } from './nodes/circle_pulse';
 
 const WIDTH = 800;
 const HEIGHT = 600;
@@ -27,7 +30,7 @@ function update({ deltaTime }: { deltaTime: number }) {
 
   const beatProgress = tempoTracker.getBeatProgress();
 
-  renderer.update({ beatProgress });
+  renderer.update({ nodes, beatProgress });
 }
 
 function draw() {
@@ -39,12 +42,15 @@ function tick({ deltaTime }: { deltaTime: number }) {
   draw();
 }
 
-const nodes: RectNode[] = [
-  new RectNode(10, 10, 100, 100, [1, 0, 0, 1]),
-  new RectNode(200, 150, 100, 30, [0, 1, 0, 1]),
-  new RectNode(250, 350, 70, 230, [0, 0, 1, 1]),
+const nodes: Node[] = [
+  new RectPulse(10, 10, 100, 100, [1, 0, 0, 1]),
+  new CirclePulse(350, 50, 70, [1, 1, 0, 1]),
+  new RectPulse(200, 150, 100, 30, [0, 1, 0, 1]),
+  new RectPulse(250, 350, 70, 230, [0, 0, 1, 1]),
+  new CirclePulse(550, 150, 30, [1, 0, 1, 1]),
 ];
 
+const shaderLoader = new ShaderLoader(gl);
 const renderLoop = new RenderLoop({
   onTick: tick,
 });
@@ -52,7 +58,11 @@ const tempoTracker = new TempoTracker();
 const renderer = new Renderer(gl);
 
 async function main() {
-  await renderer.load();
+  for (const node of nodes) {
+    await node.load({ gl, shaderLoader });
+  }
+
+  // renderLoop.next();
   renderLoop.start();
 }
 

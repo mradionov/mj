@@ -46,6 +46,16 @@ export class RenderLoop {
     this.state = State.StopRequested;
   }
 
+  // For manual stepping over frames when loop is paused
+  public next(ticks = 1): void {
+    for (let i = 0; i < ticks; i += 1) {
+      this.options.onTick?.({
+        deltaTime: this.getIdealDeltaTime(),
+        lastTime: 0,
+      });
+    }
+  }
+
   private loop = (timestamp = null): void => {
     if (this.state === State.Idle) {
       return;
