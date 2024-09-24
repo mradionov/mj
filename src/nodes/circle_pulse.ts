@@ -1,69 +1,42 @@
-import { Node, NodeLoadArgs } from './node';
+import { Node, NodeDrawArgs, NodeLoadArgs, NodeUpdateArgs } from './node';
+import { BeatKey } from '../tempo';
 
 type Color = [number, number, number, number];
 
 export class CirclePulse extends Node {
   private readonly vertices: number[];
+  private timeLocation: WebGLUniformLocation;
+  private progressLocation: WebGLUniformLocation;
 
   private program: WebGLProgram;
 
   private vertexBuffer: WebGLBuffer;
   private vertexLocation: GLuint;
-  private resolutionLocation: WebGLUniformLocation;
-  private positionLocation: WebGLUniformLocation;
-  private radiusLocation: WebGLUniformLocation;
-  private progressLocation: WebGLUniformLocation;
-  private colorLocation: WebGLUniformLocation;
 
   constructor(
     readonly x,
     readonly y,
-    readonly radius,
+    readonly size,
     readonly color: Color = [0, 0, 1, 1],
-    readonly segmentCount = 100,
+    readonly beatKey: BeatKey = 'beat',
   ) {
     super();
 
-    const centerX = x + radius;
-    const centerY = y + radius;
+    const x1 = x;
+    const x2 = x + size;
+    const y1 = y;
+    const y2 = y + size;
 
-    const vertices = [];
-
-    const angleStep = (2 * Math.PI) / segmentCount;
-
-    for (let i = 0; i < segmentCount; i++) {
-      const angle = i * angleStep;
-      const x = centerX + radius * Math.cos(angle);
-      const y = centerY + radius * Math.sin(angle);
-      vertices.push(x, y);
-    }
-
-    this.vertices = vertices;
+    this.vertices = [x1, y1, x2, y1, x1, y2, x1, y2, x2, y1, x2, y2];
   }
 
-  async load({ gl, shaderLoader }: NodeLoadArgs) {
-    const shaders = await shaderLoader.load([
-      'nodes/circle_pulse.vert',
-      'nodes/circle_pulse.frag',
-    ]);
-
-    const program = gl.createProgram();
-
-    for (const shader of shaders) {
-      gl.attachShader(program, shader);
-    }
-
-    gl.linkProgram(program);
-
-    if (!gl.getProgramParameter(program, gl.LINK_STATUS)) {
-      const error = gl.getProgramInfoLog(program);
-      gl.deleteProgram(program);
-      throw new Error(`Program error: ${error}`);
-    }
-
-    gl.useProgram(program);
-
+  async load({ gl, programFactory }: NodeLoadArgs) {
+    const program = await programFactory.create({
+      vertexShaderPath: 'nodes/circle_pulse.vert',
+      fragmentShaderPath: 'nodes/circle_pulse.frag',
+    });
     this.program = program;
+    gl.useProgram(program);
 
     this.vertexBuffer = gl.createBuffer();
     gl.bindBuffer(gl.ARRAY_BUFFER, this.vertexBuffer);
@@ -77,39 +50,34 @@ export class CirclePulse extends Node {
     gl.vertexAttribPointer(this.vertexLocation, 2, gl.FLOAT, false, 0, 0);
     gl.enableVertexAttribArray(this.vertexLocation);
 
-    this.resolutionLocation = gl.getUniformLocation(program, 'uResolution');
-    gl.uniform2f(this.resolutionLocation, gl.canvas.width, gl.canvas.height);
+    const resolutionLocation = gl.getUniformLocation(program, 'uResolution');
+    gl.uniform2f(resolutionLocation, gl.canvas.width, gl.canvas.height);
 
-    this.radiusLocation = gl.getUniformLocation(program, 'uRadius');
-    gl.uniform1f(this.radiusLocation, this.radius);
+    const dimensionsLocation = gl.getUniformLocation(program, 'uDimensions');
+    gl.uniform2f(dimensionsLocation, this.size, this.size);
 
-    this.positionLocation = gl.getUniformLocation(program, 'uPosition');
-    gl.uniform2f(this.positionLocation, this.x, this.y);
+    const positionLocation = gl.getUniformLocation(program, 'uPosition');
+    gl.uniform2f(positionLocation, this.x, this.y);
 
-    this.colorLocation = gl.getUniformLocation(program, 'uColor');
-    gl.uniform4f(this.colorLocation, ...this.color);
+    const colorLocation = gl.getUniformLocation(program, 'uColor');
+    gl.uniform4f(colorLocation, ...this.color);
 
     this.progressLocation = gl.getUniformLocation(program, 'uProgress');
   }
 
-  update({
-    gl,
-    beatProgress,
-  }: {
-    gl: WebGLRenderingContext;
-    beatProgress: number;
-  }) {
+  update({ gl, time, beatProgress }: NodeUpdateArgs): void {
     gl.useProgram(this.program);
 
-    gl.uniform1f(this.progressLocation, beatProgress);
+    gl.uniform1f(this.timeLocation, time);
+    gl.uniform1f(this.progressLocation, beatProgress[this.beatKey]);
   }
 
-  draw({ gl }: { gl: WebGLRenderingContext }) {
+  draw({ gl }: NodeDrawArgs) {
     gl.useProgram(this.program);
 
     gl.bindBuffer(gl.ARRAY_BUFFER, this.vertexBuffer);
     gl.vertexAttribPointer(this.vertexLocation, 2, gl.FLOAT, false, 0, 0);
 
-    gl.drawArrays(gl.TRIANGLE_FAN, 0, this.segmentCount);
+    gl.drawArrays(gl.TRIANGLES, 0, 6);
   }
 }

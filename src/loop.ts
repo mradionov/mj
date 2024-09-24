@@ -3,7 +3,7 @@ type RenderLoopOptions = {
   // or breakpoint is activated during debugging.
   deltaTimeLimit?: number;
   fps?: number;
-  onTick?: ({ deltaTime }: { deltaTime: number; lastTime: number }) => void;
+  onTick?: (args: { deltaTime: number; time: number }) => void;
 };
 
 const DEFAULT_OPTIONS = {
@@ -51,7 +51,7 @@ export class RenderLoop {
     for (let i = 0; i < ticks; i += 1) {
       this.options.onTick?.({
         deltaTime: this.getIdealDeltaTime(),
-        lastTime: 0,
+        time: 0,
       });
     }
   }
@@ -91,9 +91,9 @@ export class RenderLoop {
 
     this.lastTimestamp = timestamp;
 
-    const lastTime = timestamp / 1000;
+    const time = timestamp / 1000;
 
-    this.options.onTick?.({ deltaTime, lastTime });
+    this.options.onTick?.({ deltaTime, time });
 
     window.requestAnimationFrame(this.loop);
   };

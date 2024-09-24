@@ -1,4 +1,4 @@
-import { Node, NodeLoadArgs } from './node';
+import { Node, NodeDrawArgs, NodeLoadArgs, NodeUpdateArgs } from './node';
 
 type Color = [number, number, number, number];
 
@@ -32,29 +32,13 @@ export class RectPulse extends Node {
     this.vertices = [x1, y1, x2, y1, x1, y2, x1, y2, x2, y1, x2, y2];
   }
 
-  async load({ gl, shaderLoader }: NodeLoadArgs) {
-    const shaders = await shaderLoader.load([
-      'nodes/rect_pulse.vert',
-      'nodes/rect_pulse.frag',
-    ]);
-
-    const program = gl.createProgram();
-
-    for (const shader of shaders) {
-      gl.attachShader(program, shader);
-    }
-
-    gl.linkProgram(program);
-
-    if (!gl.getProgramParameter(program, gl.LINK_STATUS)) {
-      const error = gl.getProgramInfoLog(program);
-      gl.deleteProgram(program);
-      throw new Error(`Program error: ${error}`);
-    }
-
-    gl.useProgram(program);
-
+  async load({ gl, programFactory }: NodeLoadArgs) {
+    const program = await programFactory.create({
+      vertexShaderPath: 'nodes/rect_pulse.vert',
+      fragmentShaderPath: 'nodes/rect_pulse.frag',
+    });
     this.program = program;
+    gl.useProgram(program);
 
     this.vertexBuffer = gl.createBuffer();
     gl.bindBuffer(gl.ARRAY_BUFFER, this.vertexBuffer);
@@ -83,19 +67,13 @@ export class RectPulse extends Node {
     this.progressLocation = gl.getUniformLocation(program, 'uProgress');
   }
 
-  update({
-    gl,
-    beatProgress,
-  }: {
-    gl: WebGLRenderingContext;
-    beatProgress: number;
-  }) {
+  update({ gl, beatProgress }: NodeUpdateArgs) {
     gl.useProgram(this.program);
 
-    gl.uniform1f(this.progressLocation, beatProgress);
+    gl.uniform1f(this.progressLocation, beatProgress.beat);
   }
 
-  draw({ gl }: { gl: WebGLRenderingContext }) {
+  draw({ gl }: NodeDrawArgs) {
     gl.useProgram(this.program);
 
     gl.bindBuffer(gl.ARRAY_BUFFER, this.vertexBuffer);

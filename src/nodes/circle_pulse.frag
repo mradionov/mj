@@ -2,26 +2,24 @@ precision mediump float;
 
 varying vec2 vPosition;
 
-uniform float uProgress;
 uniform vec2 uResolution;
-uniform float uRadius;
+uniform vec2 uDimensions;
 uniform vec2 uPosition;
+uniform float uProgress;
 uniform vec4 uColor;
 
 void main() {
-    float thickness = 2.0;
+    float maxRadius = uDimensions.x / 2.0;
 
-    float progressRadius = uRadius * uProgress;
+    vec2 center = uPosition + maxRadius;
 
-    vec2 center = uPosition + uRadius;
+    float dist = length(center - vPosition);
 
-    bool isOutline = pow(vPosition.x - center.x, 2.0) + pow(vPosition.y - center.y, 2.0) > pow(uRadius - thickness, 2.0);
+    float radius = maxRadius * uProgress;
 
-    bool isProgress = pow(vPosition.x - center.x, 2.0) + pow(vPosition.y - center.y, 2.0) < pow(progressRadius, 2.0);
+    float circle = smoothstep(radius, radius, dist);
 
-    if (isOutline || isProgress) {
-        gl_FragColor = uColor;
-    } else {
-        discard;
-    }
+    vec3 color = vec3(uColor - circle);
+
+    gl_FragColor = vec4(color, 1.0);
 }

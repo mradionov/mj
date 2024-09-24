@@ -1,13 +1,15 @@
-import { ShaderLoader } from '../shader';
+import { ProgramFactory } from '../program';
+import { BeatProgress } from '../tempo';
 
 export type NodeLoadArgs = {
   gl: WebGLRenderingContext;
-  shaderLoader: ShaderLoader;
+  programFactory: ProgramFactory;
 };
 
 export type NodeUpdateArgs = {
   gl: WebGLRenderingContext;
-  beatProgress: number;
+  beatProgress: BeatProgress;
+  time: number;
 };
 
 export type NodeDrawArgs = { gl: WebGLRenderingContext };

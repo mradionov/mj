@@ -1,13 +1,22 @@
 import { Node } from './nodes/node';
+import { BeatProgress } from './tempo';
 
 export class Renderer {
   constructor(private readonly gl: WebGLRenderingContext) {}
 
-  update({ nodes, beatProgress }: { nodes: Node[]; beatProgress: number }) {
+  update({
+    nodes,
+    beatProgress,
+    time,
+  }: {
+    nodes: Node[];
+    beatProgress: BeatProgress;
+    time: number;
+  }) {
     const { gl } = this;
 
     for (const node of nodes) {
-      node.update({ gl, beatProgress });
+      node.update({ gl, beatProgress, time });
     }
   }
 
